@@ -1,16 +1,12 @@
 from flask import Blueprint, request, render_template, redirect
-from config import db
-from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, SubmitField, PasswordField
-from wtforms.validators import DataRequired
 from config import app
 import hashlib
-from flask_login import login_user
 from routes.sign_up import register_form, login_form, Users
+from flask_login import login_user
 
 first_route = Blueprint('first_route', __name__)
 
-hash = hashlib.new('sha1')
+a = []
 
 
 @app.route("/login")
@@ -27,13 +23,13 @@ def register():
         pwd = form.pwd.data
         valid_email = list(map(lambda x: x.get_pass(), Users.query.filter_by(email=email)))
         print(valid_email)
-        if valid_email != []:
-            hash.update(pwd.encode())
-            pwd = hash.hexdigest()  # хэширование
-            print(pwd)
+        if valid_email:
+            pwd = hashlib.sha1(pwd.encode()).hexdigest()
+            print(valid_email)
             if pwd == valid_email[0]:
-                # user = Users.query.filter_by(email=form.email).first()
-                # login_user(user, remember=remember)
+                remember = True if request.form.get('remember') else False
+                user = Users.query.filter_by(email=email).first()
+                login_user(user, remember=remember)
                 return redirect("/")
             error_body = {'reason': 'Try a different password'}
             return render_template("login.html",res=error_body, form=form)
